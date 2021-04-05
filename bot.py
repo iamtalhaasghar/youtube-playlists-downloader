@@ -5,14 +5,7 @@ class InvidiousBot:
 
     def __getFirefoxDriver(self):
         from selenium import webdriver
-        from selenium.webdriver.firefox.options import Options
-
-        options = Options()
-        #options.headless = True
-        #geckoDriver = '/home/talha/Programs/geckodriver'
         browser = webdriver.Chrome()
-        #browser = webdriver.Firefox(options=options, executable_path=geckoDriver)
-        
         return browser
 
     def scrapVideosOfChannel(self, channelId, alreadyScrapedVideoList=None):
@@ -24,6 +17,11 @@ class InvidiousBot:
         alreadyScraped = False
         pageNumber = 1
         scrapedVideos = list()
+
+        browser.get(channelUrl)
+        channelProfileDiv = browser.find_element_by_xpath("//div[@class='channel-profile']")
+        channelName = channelProfileDiv.text.strip()
+        print(channelName)
         while not alreadyScraped and isThereNextPage:
             print(channelUrl, pageNumber)
             browser.get('%s?page=%d' % (channelUrl, pageNumber))
@@ -69,21 +67,26 @@ class InvidiousBot:
                     isThereNextPage = False
                     print(ex)
         browser.close()
+        scrapedVideos.append(channelName)
         return scrapedVideos
 
 
 
 if __name__ == "__main__":
     import sys
-    
+    import os
+
+    folderPath = '%s/Documents/YoutubeScraper' % (os.path.expanduser("~"))
+    if (not os.path.exists(folderPath)):
+        os.mkdir(folderPath)
+
     if len(sys.argv) > 1:
         channelIds = sys.argv[1:]
         for channel in channelIds:
             print('Scraping: ', channel)
-            filePath = '%s.html' % (channel)
             ytChannel = InvidiousBot()        
-            videos = ytChannel.scrapVideosOfChannel(channel)        
-            f = open(filePath, 'w', encoding='utf-8')
+            videos = ytChannel.scrapVideosOfChannel(channel)
+            f = open('%s/%s.html' % (folderPath, videos.pop()), 'w', encoding='utf-8')
             f.write('<ol>\n')
             for i in videos:
                 f.write('<li><a href="https://www.youtube.com/watch?v=%s">%s</a></li>\n' % (i['video_id'], i['title']))
@@ -92,7 +95,7 @@ if __name__ == "__main__":
     
     else:
         print("Please provide some channel ids.")
-
+       
         
 
 
